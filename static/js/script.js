@@ -26,6 +26,7 @@ function setupEventHandlers() {
     $('#uploadData').click(uploadData);
     $('#fetchData').click(fetchData);
     $('#runGA').click(runGeneticAlgorithm);
+    $('#cancelGA').click(cancelGeneticAlgorithm);
     $('#clearCache').click(clearAllCache);
     $('#compareMethods').click(compareMethods);
     $('#runTraditionalMethods').click(runAllTraditionalMethods);
@@ -211,21 +212,28 @@ function displayDataPreview(csvData) {
     }
 }
 
+let gaPollTimer = null;
+let activeGAJobId = null;
+
 function runGeneticAlgorithm() {
     if (!currentDataset) {
         showError('يرجى تحميل أو توليد بيانات أولاً');
         return;
     }
-    
+
+    if (activeGAJobId) {
+        showError('توجد تجربة GA قيد التشغيل بالفعل');
+        return;
+    }
+
     const popSize = $('#popSize').val();
     const generations = $('#generations').val();
     const crossoverRate = $('#crossoverRate').val();
     const mutationRate = $('#mutationRate').val();
-    
-    console.log(`🔄 تشغيل GA: popSize=${popSize}, generations=${generations}`);
-    
-    showLoading($('#runGA'));
-    
+
+    setGAProgressState(true, 'queued');
+    $('#runGA').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Starting search…');
+
     $.ajax({
         url: '/api/ga',
         type: 'POST',
@@ -240,34 +248,122 @@ function runGeneticAlgorithm() {
             use_cache: true
         }),
         success: function(response) {
-            hideLoading($('#runGA'));
-            if (response.error) {
-                showError('خطأ في الخوارزمية الجينية: ' + response.error);
+            if (response.cached) {
+                finishGA(response);
                 return;
             }
-            
-            gaResult = response;
-            displayGAResults(response);
-            showSuccess('تم تشغيل الخوارزمية الجينية بنجاح!');
-            checkCacheStatus();
-            
-            // عرض النتائج التفصيلية
-            setTimeout(() => {
-                displayGADetailedResults();
-            }, 500);
-            
-            console.log("✅ تم تشغيل GA بنجاح");
+
+            activeGAJobId = response.job_id;
+            $('#gaTotalGenerations').text(response.total_generations || generations);
+            pollGAStatus();
         },
-        error: function(xhr, status, error) {
-            hideLoading($('#runGA'));
-            let errorMsg = 'فشل في الاتصال بالخادم';
-            if (xhr.responseJSON && xhr.responseJSON.error) {
-                errorMsg = xhr.responseJSON.error;
-            }
+        error: function(xhr) {
+            resetGAControls();
+            setGAProgressState(false);
+            const errorMsg = xhr.responseJSON?.error || 'فشل في بدء البحث';
             showError('خطأ في الخوارزمية الجينية: ' + errorMsg);
-            console.error("❌ خطأ في GA:", error, xhr.responseJSON);
         }
     });
+}
+
+function pollGAStatus() {
+    if (!activeGAJobId) return;
+
+    $.get('/api/ga/status/' + activeGAJobId)
+        .done(function(job) {
+            updateGAProgress(job);
+
+            if (job.status === 'completed') {
+                finishGA(job.result);
+                return;
+            }
+
+            if (job.status === 'cancelled') {
+                activeGAJobId = null;
+                clearTimeout(gaPollTimer);
+                resetGAControls();
+                setGAProgressState(false);
+                showSuccess('تم إلغاء البحث.');
+                return;
+            }
+
+            if (job.status === 'error') {
+                activeGAJobId = null;
+                clearTimeout(gaPollTimer);
+                resetGAControls();
+                setGAProgressState(false);
+                showError('خطأ في الخوارزمية الجينية: ' + (job.error || 'خطأ غير معروف'));
+                return;
+            }
+
+            gaPollTimer = setTimeout(pollGAStatus, 700);
+        })
+        .fail(function() {
+            // A temporary polling failure should not kill a running GA job.
+            // Retry instead of telling the user the server is down.
+            gaPollTimer = setTimeout(pollGAStatus, 1500);
+        });
+}
+
+function updateGAProgress(job) {
+    const progress = Math.max(0, Math.min(100, Number(job.progress || 0)));
+    $('#gaProgressBar').css('width', progress + '%');
+    $('#gaProgressPercent').text(progress + '%');
+    $('#gaGeneration').text(job.generation || 0);
+    $('#gaTotalGenerations').text(job.total_generations || $('#generations').val());
+    $('#gaLiveFitness').text(
+        job.best_fitness !== undefined ? Number(job.best_fitness).toFixed(4) : '—'
+    );
+    $('#gaLiveFeatures').text(job.selected_count ?? '—');
+    $('#gaLiveEvaluated').text(job.evaluated_solutions ?? '—');
+
+    if (job.status === 'running') {
+        $('#gaProgressTitle').text('Searching the feature space…');
+        $('#runGA').html('<i class="fa-solid fa-dna fa-spin"></i> Evolution in progress…');
+    }
+}
+
+function finishGA(response) {
+    clearTimeout(gaPollTimer);
+    activeGAJobId = null;
+    gaResult = response;
+    updateGAProgress({
+        progress: 100,
+        generation: response.history?.length || $('#generations').val(),
+        total_generations: response.config?.generations || $('#generations').val(),
+        best_fitness: response.final_score,
+        selected_count: response.selected_features?.length || 0,
+        evaluated_solutions: response.cache_size || 0
+    });
+    displayGAResults(response);
+    resetGAControls();
+    setGAProgressState(false);
+    showSuccess(response.cached ? 'تم استرجاع نتيجة مخزنة.' : 'اكتمل البحث التطوري بنجاح!');
+    checkCacheStatus();
+    setTimeout(displayGADetailedResults, 300);
+}
+
+function cancelGeneticAlgorithm() {
+    if (!activeGAJobId) return;
+
+    $('#cancelGA').prop('disabled', true).text('Cancelling…');
+    $.post('/api/ga/cancel/' + activeGAJobId);
+}
+
+function resetGAControls() {
+    $('#runGA').prop('disabled', false).html('<i class="fa-solid fa-dna"></i> Run evolutionary search');
+    $('#cancelGA').prop('disabled', false).text('Cancel');
+}
+
+function setGAProgressState(show, status) {
+    if (show) {
+        $('#gaProgressPanel').stop(true, true).fadeIn(180);
+        if (status === 'queued') {
+            $('#gaProgressTitle').text('Preparing evolutionary search…');
+        }
+    } else {
+        $('#gaProgressPanel').stop(true, true).fadeOut(180);
+    }
 }
 
 function displayGAResults(result) {

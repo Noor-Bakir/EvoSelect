@@ -117,6 +117,8 @@ def run_genetic_algorithm(
     target_name: str,
     config: GAConfig | None = None,
     verbose: bool = False,
+    progress_callback=None,
+    cancel_event=None,
 ):
     config = config or GAConfig()
     if config.pop_size < 4:
@@ -182,6 +184,27 @@ def run_genetic_algorithm(
                 f"fitness={generation_best:.4f} "
                 f"features={sum(generation_solution)}"
             )
+
+        if progress_callback:
+            progress_callback({
+                "generation": generation + 1,
+                "total_generations": config.generations,
+                "best_fitness": generation_best,
+                "best_selected_count": int(sum(generation_solution)),
+                "evaluated_solutions": len(fitness_cache),
+            })
+
+        if cancel_event is not None and cancel_event.is_set():
+            return {
+                "cancelled": True,
+                "method": "genetic",
+                "history": history,
+                "best_chromosome": best_solution,
+                "best_chromosome_str": "".join(map(str, best_solution or [])),
+                "best_selected_count": int(sum(best_solution)) if best_solution is not None else 0,
+                "config": config.__dict__,
+                "cache_size": len(fitness_cache),
+            }
 
         if stagnant >= config.patience:
             break

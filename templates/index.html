@@ -1,475 +1,236 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EvoSelect — اختيار الميزات التطوري</title>
+    <meta name="theme-color" content="#080b12">
+    <meta name="description" content="EvoSelect — leakage-aware evolutionary feature selection and benchmarking.">
+    <title>EvoSelect — Evolutionary Feature Selection Benchmark</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- شريط التنقل -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-dna me-2"></i>
-                EvoSelect
+<div class="app-shell">
+    <nav class="topbar">
+        <div class="container nav-inner">
+            <a class="brand" href="#">
+                <span class="brand-mark"><i class="fa-solid fa-dna"></i></span>
+                <span>Evo<span>Select</span></span>
             </a>
+            <div class="nav-links">
+                <a href="#data-section">Experiment</a>
+                <a href="#comparison-section">Benchmark</a>
+                <a href="#methodology">Methodology</a>
+            </div>
+            <div class="nav-status"><span class="status-dot"></span> Experiment ready</div>
         </div>
     </nav>
 
-    <!-- المحتوى الرئيسي -->
-    <div class="container mt-4">
-        <!-- قسم البيانات -->
-        <section id="data-section" class="mb-5">
-            <div class="section-header">
-                <h2><i class="fas fa-database me-2"></i>إدارة البيانات</h2>
-                <p class="section-description">قم بتحميل أو توليد البيانات لبدء عملية اختيار الميزات</p>
-            </div>
-            
-            <div class="row">
-                <!-- توليد بيانات عشوائية -->
-                <div class="col-md-4">
-                    <div class="card data-card">
-                        <div class="card-header bg-info text-white">
-                            <h5><i class="fas fa-random me-2"></i>توليد بيانات عشوائية</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label">عدد العينات</label>
-                                <input type="number" class="form-control" id="nSamples" value="200" min="50" max="1000">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">عدد الميزات</label>
-                                <input type="number" class="form-control" id="nFeatures" value="20" min="5" max="100">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">الميزات المعلوماتية</label>
-                                <input type="number" class="form-control" id="nInformative" value="5" min="1" max="20">
-                            </div>
-                            <button class="btn btn-info w-100" id="generateData">
-                                <i class="fas fa-random me-2"></i>توليد بيانات
-                            </button>
-                        </div>
-                    </div>
+    <main>
+        <section class="hero">
+            <div class="hero-grid"></div>
+            <div class="container hero-content">
+                <div class="eyebrow"><span></span> EVOLUTIONARY FEATURE SELECTION</div>
+                <h1>Find the features<br><em>that actually matter.</em></h1>
+                <p class="hero-copy">Use a Genetic Algorithm to search compact feature subsets, then benchmark the result against classical statistical and model-based selectors.</p>
+                <div class="hero-actions">
+                    <a href="#data-section" class="btn btn-primary btn-lg"><i class="fa-solid fa-flask-vial"></i> Start an experiment</a>
+                    <a href="#comparison-section" class="btn btn-ghost btn-lg"><i class="fa-solid fa-chart-column"></i> Explore benchmark</a>
                 </div>
-
-                <!-- رفع ملف -->
-                <div class="col-md-4">
-                    <div class="card data-card">
-                        <div class="card-header bg-success text-white">
-                            <h5><i class="fas fa-upload me-2"></i>رفع ملف بيانات</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label">اختر ملف البيانات</label>
-                                <input class="form-control" type="file" id="fileUpload" accept=".csv,.xlsx,.xls">
-                            </div>
-                            <p class="text-muted small">يدعم الملفات: CSV, Excel</p>
-                            <button class="btn btn-success w-100" id="uploadData">
-                                <i class="fas fa-upload me-2"></i>رفع البيانات
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- جلب من رابط -->
-                <div class="col-md-4">
-                    <div class="card data-card">
-                        <div class="card-header bg-warning text-dark">
-                            <h5><i class="fas fa-download me-2"></i>جلب من رابط</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label">رابط البيانات</label>
-                                <input type="url" class="form-control" id="dataUrl" placeholder="https://example.com/data.csv">
-                            </div>
-                            <p class="text-muted small">يدعم روابط CSV و Excel</p>
-                            <button class="btn btn-warning w-100" id="fetchData">
-                                <i class="fas fa-download me-2"></i>جلب البيانات
-                            </button>
-                        </div>
-                    </div>
+                <div class="hero-pills">
+                    <span><i class="fa-solid fa-shield-halved"></i> Leakage-aware</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Nested CV</span>
+                    <span><i class="fa-solid fa-microchip"></i> Genetic Search</span>
+                    <span><i class="fa-solid fa-code-branch"></i> Reproducible</span>
                 </div>
             </div>
+            <div class="hero-orbit orbit-one"></div>
+            <div class="hero-orbit orbit-two"></div>
+            <div class="hero-node node-a"></div><div class="hero-node node-b"></div><div class="hero-node node-c"></div>
+        </section>
 
-            <!-- معاينة البيانات -->
-            <div id="dataPreview" class="mt-4" style="display: none;">
-                <div class="card">
-                    <div class="card-header bg-secondary text-white">
-                        <h5><i class="fas fa-table me-2"></i>معاينة البيانات</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-bordered" id="previewTable">
-                                <thead class="table-light">
-                                    <tr id="previewHeader"></tr>
-                                </thead>
-                                <tbody id="previewBody"></tbody>
-                            </table>
-                        </div>
-                        <div class="mt-2 text-muted" id="dataInfo"></div>
-                    </div>
-                </div>
+        <section class="container metric-strip">
+            <div class="metric"><div class="metric-value">60</div><div class="metric-label">Original features</div></div>
+            <div class="metric"><div class="metric-value">~16</div><div class="metric-label">GA-selected features</div></div>
+            <div class="metric"><div class="metric-value">72.8%</div><div class="metric-label">Feature reduction</div></div>
+            <div class="metric"><div class="metric-value">81.25%</div><div class="metric-label">GA accuracy</div></div>
+        </section>
+
+        <section id="methodology" class="container workflow-section">
+            <div class="section-intro">
+                <div><div class="eyebrow"><span></span> THE WORKFLOW</div><h2>From raw data to a defensible subset.</h2></div>
+                <p>Every selection method is evaluated inside the experiment rather than leaking information from the test fold.</p>
+            </div>
+            <div class="workflow">
+                <div class="workflow-step"><span>01</span><i class="fa-solid fa-database"></i><h3>Load data</h3><p>Upload CSV/Excel or generate a controlled dataset.</p></div>
+                <div class="workflow-line"></div>
+                <div class="workflow-step"><span>02</span><i class="fa-solid fa-filter-circle-dollar"></i><h3>Search</h3><p>Explore feature subsets with evolutionary optimization.</p></div>
+                <div class="workflow-line"></div>
+                <div class="workflow-step"><span>03</span><i class="fa-solid fa-chart-line"></i><h3>Benchmark</h3><p>Compare GA against classical selection strategies.</p></div>
+                <div class="workflow-line"></div>
+                <div class="workflow-step"><span>04</span><i class="fa-solid fa-circle-check"></i><h3>Evaluate</h3><p>Inspect performance, subset size and convergence.</p></div>
             </div>
         </section>
 
-        <!-- قسم الخوارزمية الجينية -->
-        <section id="ga-section" class="mb-5">
-            <div class="section-header">
-                <h2><i class="fas fa-brain me-2"></i>الخوارزمية الجينية</h2>
-                <p class="section-description">استخدم الخوارزمية الجينية المتطورة لإيجاد أفضل مجموعة ميزات</p>
+        <section id="data-section" class="container app-section">
+            <div class="section-heading">
+                <div><div class="eyebrow"><span></span> 01 / DATA</div><h2>Start with your dataset</h2><p>Choose a dataset source. The target defaults to the final column.</p></div>
+                <div class="section-badge"><i class="fa-solid fa-lock"></i> Local experiment</div>
             </div>
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card method-box ga-box">
-                        <div class="card-header bg-primary text-white">
-                            <h5><i class="fas fa-dna me-2"></i>الخوارزمية الجينية</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="method-description">
-                                <p>الخوارزمية الجينية تحاكي عملية التطور الطبيعي لإيجاد أفضل مجموعة من الميزات باستخدام التهجين والطفرة والاختيار.</p>
-                            </div>
-                            <div class="row g-3 mt-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">حجم المجتمع</label>
-                                    <input type="number" class="form-control" id="popSize" value="40" min="10" max="200">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">عدد الأجيال</label>
-                                    <input type="number" class="form-control" id="generations" value="30" min="5" max="100">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">معدل التهجين</label>
-                                    <input type="number" class="form-control" id="crossoverRate" value="0.8" min="0.1" max="1" step="0.1">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">معدل الطفرة</label>
-                                    <input type="number" class="form-control" id="mutationRate" value="0.02" min="0.01" max="0.2" step="0.01">
-                                </div>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <button class="btn btn-primary btn-lg" id="runGA">
-                                    <i class="fas fa-play me-2"></i>تشغيل الخوارزمية الجينية
-                                </button>
-                            </div>
-                            <div class="mt-3 text-center">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    حالة الذاكرة: 
-                                    <span id="gaCacheStatus" class="badge bg-secondary">غير متوفرة</span>
-                                </small>
-                            </div>
-                        </div>
+            <div class="source-grid">
+                <article class="source-card featured">
+                    <div class="source-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div class="source-top"><span>QUICK START</span><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+                    <h3>Generate a dataset</h3>
+                    <p>Create a controlled classification dataset to test the pipeline immediately.</p>
+                    <div class="field-grid three">
+                        <label>Samples<input type="number" id="nSamples" value="200" min="50" max="1000"></label>
+                        <label>Features<input type="number" id="nFeatures" value="20" min="5" max="100"></label>
+                        <label>Informative<input type="number" id="nInformative" value="5" min="1" max="20"></label>
                     </div>
-                </div>
+                    <button class="btn btn-primary w-100" id="generateData"><i class="fa-solid fa-sparkles"></i> Generate dataset</button>
+                </article>
 
-                <div class="col-md-4">
-                    <div class="card info-card">
-                        <div class="card-header bg-info text-white">
-                            <h5><i class="fas fa-lightbulb me-2"></i>معلومات الخوارزمية</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>الخوارزمية الجينية تحاكي عملية التطور الطبيعي لإيجاد أفضل مجموعة من الميزات.</p>
-                            <ul class="fa-ul">
-                                <li><span class="fa-li"><i class="fas fa-check text-success"></i></span>تهجين وطفرة</li>
-                                <li><span class="fa-li"><i class="fas fa-check text-success"></i></span>اختيار الأفضل</li>
-                                <li><span class="fa-li"><i class="fas fa-check text-success"></i></span>تطور عبر الأجيال</li>
-                                <li><span class="fa-li"><i class="fas fa-check text-success"></i></span>نتائج مثبتة علمياً</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                <article class="source-card">
+                    <div class="source-icon muted"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <div class="source-top"><span>YOUR DATA</span></div>
+                    <h3>Upload a file</h3>
+                    <p>Bring your own classification dataset and let EvoSelect inspect it.</p>
+                    <label class="dropzone" for="fileUpload">
+                        <i class="fa-solid fa-file-csv"></i>
+                        <strong>Choose CSV or Excel</strong>
+                        <small>Drag & drop or browse</small>
+                        <input type="file" id="fileUpload" accept=".csv,.xlsx,.xls">
+                    </label>
+                    <button class="btn btn-secondary w-100" id="uploadData"><i class="fa-solid fa-upload"></i> Upload dataset</button>
+                </article>
+
+                <article class="source-card disabled-source">
+                    <div class="source-icon muted"><i class="fa-solid fa-link"></i></div>
+                    <div class="source-top"><span>REMOTE SOURCE</span><span class="mini-tag">DISABLED</span></div>
+                    <h3>Fetch from URL</h3>
+                    <p>Remote ingestion is intentionally disabled in v2 to avoid SSRF risks.</p>
+                    <input class="form-control" type="url" id="dataUrl" placeholder="Remote URL disabled">
+                    <button class="btn btn-outline-secondary w-100" id="fetchData"><i class="fa-solid fa-ban"></i> Unavailable in v2</button>
+                </article>
             </div>
 
-            <!-- نتائج الخوارزمية الجينية -->
-            <div id="gaResults" class="mt-4" style="display: none;">
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5><i class="fas fa-chart-line me-2"></i>نتائج الخوارزمية الجينية</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-icon bg-primary">
-                                        <i class="fas fa-star"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h3 id="gaFinalScore">0.0000</h3>
-                                        <p>اللياقة النهائية</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-icon bg-success">
-                                        <i class="fas fa-list"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h3 id="gaSelectedCount">0</h3>
-                                        <p>عدد الميزات المختارة</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-icon bg-info">
-                                        <i class="fas fa-bolt"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h3 id="gaCacheStatus2">جديدة</h3>
-                                        <p>حالة النتيجة</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <h6>الميزات المختارة:</h6>
-                            <div id="gaSelectedFeatures" class="feature-list"></div>
-                        </div>
-                    </div>
-                </div>
+            <div id="dataPreview" class="result-panel mt-4" style="display:none;">
+                <div class="panel-head"><div><span class="eyebrow small-eyebrow"><span></span> DATA PREVIEW</div><h3>Dataset snapshot</h3></div>
+                <div class="table-wrap"><table class="table" id="previewTable"><thead><tr id="previewHeader"></tr></thead><tbody id="previewBody"></tbody></table></div>
+                <div class="panel-foot" id="dataInfo"></div>
             </div>
         </section>
 
-        <!-- قسم نتائج الخوارزمية الجينية التفصيلية -->
-        <section id="ga-results-detailed-section" class="mb-5" style="display: none;">
-            <div class="section-header">
-                <h2><i class="fas fa-brain me-2"></i>نتائج الخوارزمية الجينية</h2>
-                <p class="section-description">النتائج التفصيلية للخوارزمية الجينية</p>
+        <section id="ga-section" class="container app-section">
+            <div class="section-heading">
+                <div><div class="eyebrow"><span></span> 02 / EVOLUTIONARY SEARCH</div><h2>Let the population search the feature space</h2><p>Configure the genetic search, then inspect the best subset it discovers.</p></div>
+                <span id="gaCacheStatus" class="cache-pill">Cache checking…</span>
+            </div>
+            <div class="experiment-card">
+                <div class="config-column">
+                    <div class="config-title"><span>Genetic Algorithm</span><small>Search configuration</small></div>
+                    <div class="field-grid two">
+                        <label>Population size<input type="number" id="popSize" value="30" min="5"></label>
+                        <label>Generations<input type="number" id="generations" value="20" min="1"></label>
+                        <label>Crossover rate<input type="number" id="crossoverRate" value="0.8" min="0" max="1" step="0.05"></label>
+                        <label>Mutation rate<input type="number" id="mutationRate" value="0.02" min="0" max="1" step="0.01"></label>
+                    </div>
+                    <button class="btn btn-primary btn-lg w-100" id="runGA"><i class="fa-solid fa-dna"></i> Run evolutionary search</button>
+                    <div id="gaProgressPanel" class="ga-progress-panel" style="display:none;">
+                        <div class="progress-head">
+                            <div>
+                                <span class="progress-kicker">LIVE SEARCH</span>
+                                <strong id="gaProgressTitle">Evolutionary search in progress</strong>
+                            </div>
+                            <button type="button" class="btn btn-cancel" id="cancelGA">Cancel</button>
+                        </div>
+                        <div class="progress-meta">
+                            <span>Generation <b id="gaGeneration">0</b> / <b id="gaTotalGenerations">20</b></span>
+                            <span id="gaProgressPercent">0%</span>
+                        </div>
+                        <div class="ga-progress-track"><div id="gaProgressBar" class="ga-progress-bar"></div></div>
+                        <div class="progress-live-stats">
+                            <div><span>Best fitness</span><b id="gaLiveFitness">—</b></div>
+                            <div><span>Features</span><b id="gaLiveFeatures">—</b></div>
+                            <div><span>Evaluated</span><b id="gaLiveEvaluated">—</b></div>
+                        </div>
+                    </div>
+                    <div class="trust-row"><span><i class="fa-solid fa-shield"></i> 5-fold CV</span><span><i class="fa-solid fa-seedling"></i> Fixed seed</span><span><i class="fa-solid fa-bolt"></i> Cached runs</span></div>
+                </div>
+                <div class="ga-visual">
+                    <div class="ga-rings"><div class="ring ring-1"></div><div class="ring ring-2"></div><div class="ring ring-3"></div><div class="dna-core"><i class="fa-solid fa-dna"></i></div></div>
+                    <div><strong>Evolutionary search</strong><span>Selection → crossover → mutation → evaluation</span></div>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5><i class="fas fa-dna me-2"></i>النتائج التفصيلية</h5>
+            <div id="gaResults" class="result-panel mt-4" style="display:none;">
+                <div class="result-summary">
+                    <div><span>BEST FITNESS</span><strong id="gaFinalScore">0.0000</strong></div>
+                    <div><span>SELECTED FEATURES</span><strong id="gaSelectedCount">0</strong></div>
+                    <div><span>RUN STATUS</span><strong id="gaCacheStatus2">—</strong></div>
                 </div>
-                <div class="card-body">
-                    <div id="gaDetailedResultsContent">
-                        <!-- سيتم ملء هذا القسم بالنتائج -->
-                    </div>
-                </div>
+                <div class="feature-panel"><div class="panel-head"><div><span class="eyebrow small-eyebrow"><span></span> SELECTED SUBSET</div><h3>Features retained by GA</h3></div><div id="gaSelectedFeatures" class="feature-list modern-list"></div></div>
             </div>
         </section>
 
-        <!-- قسم الطرق التقليدية -->
-        <section id="traditional-section" class="mb-5">
-            <div class="section-header">
-                <h2><i class="fas fa-chart-bar me-2"></i>الطرق التقليدية</h2>
-                <p class="section-description">طرق اختيار الميزات التقليدية المعتمدة على النماذج</p>
-            </div>
-
-            <div class="card method-box traditional-box">
-                <div class="card-header bg-warning text-dark">
-                    <h5><i class="fas fa-cogs me-2"></i>الطرق التقليدية</h5>
-                </div>
-                <div class="card-body">
-                    <div class="method-description">
-                        <p>تشمل الطرق التقليدية: Random Forest, L1 Logistic, RFE with Random Forest</p>
-                    </div>
-                    <div class="row mt-4">
-                        <div class="col-md-4">
-                            <div class="method-item">
-                                <h6><i class="fas fa-tree me-2"></i>Random Forest</h6>
-                                <p class="small text-muted">اختيار الميزات بناءً على أهمية الميزات في غابة عشوائية</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="method-item">
-                                <h6><i class="fas fa-project-diagram me-2"></i>L1 Logistic</h6>
-                                <p class="small text-muted">اختيار الميزات باستخدام الانحدار اللوجستي مع عقوبة L1</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="method-item">
-                                <h6><i class="fas fa-sort-amount-down me-2"></i>RFE with RF</h6>
-                                <p class="small text-muted">إزالة الميزات العودية باستخدام غابة عشوائية</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-center mt-4">
-                        <button class="btn btn-warning btn-lg" id="runTraditionalMethods">
-                            <i class="fas fa-play-circle me-2"></i>تشغيل جميع الطرق التقليدية
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <section id="ga-results-detailed-section" class="container app-section" style="display:none;">
+            <div class="section-heading"><div><div class="eyebrow"><span></span> EVOLUTION TRACE</div><h2>How the search converged</h2></div></div>
+            <div class="result-panel" id="gaDetailedResultsContent"></div>
         </section>
 
-        <!-- قسم نتائج الطرق التقليدية -->
-        <section id="traditional-results-section" class="mb-5" style="display: none;">
-            <div class="section-header">
-                <h2><i class="fas fa-list-ol me-2"></i>نتائج الطرق التقليدية</h2>
-                <p class="section-description">النتائج التفصيلية للطرق التقليدية المطبقة</p>
+        <section id="traditional-section" class="container app-section">
+            <div class="section-heading"><div><div class="eyebrow"><span></span> 03 / MODEL-BASED</div><h2>Benchmark against model-based selectors</h2><p>See how the evolutionary search compares with embedded and wrapper approaches.</p></div></div>
+            <div class="method-grid">
+                <div class="method-card"><i class="fa-solid fa-tree"></i><strong>Random Forest</strong><span>Embedded importance</span></div>
+                <div class="method-card"><i class="fa-solid fa-scale-balanced"></i><strong>L1 Logistic</strong><span>Sparse coefficient selection</span></div>
+                <div class="method-card"><i class="fa-solid fa-bullseye"></i><strong>RFE + RF</strong><span>Recursive elimination</span></div>
             </div>
-
-            <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    <h5><i class="fas fa-chart-bar me-2"></i>النتائج التفصيلية</h5>
-                </div>
-                <div class="card-body">
-                    <div id="traditionalResultsContent">
-                        <!-- سيتم ملء هذا القسم بالنتائج -->
-                    </div>
-                </div>
-            </div>
+            <button class="btn btn-secondary" id="runTraditionalMethods"><i class="fa-solid fa-play"></i> Run model-based methods</button>
+            <div id="traditional-results-section" class="result-panel mt-4" style="display:none;"><div id="traditionalResultsContent"></div></div>
         </section>
 
-        <!-- قسم الطرق الإحصائية -->
-        <section id="statistical-section" class="mb-5">
-            <div class="section-header">
-                <h2><i class="fas fa-calculator me-2"></i>الطرق الإحصائية</h2>
-                <p class="section-description">طرق اختيار الميزات المعتمدة على الإحصائيات والاختبارات</p>
+        <section id="statistical-section" class="container app-section">
+            <div class="section-heading"><div><div class="eyebrow"><span></span> 04 / STATISTICAL</div><h2>Compare classical filters</h2><p>Fast statistical selectors provide useful baselines for the benchmark.</p></div></div>
+            <div class="method-grid four">
+                <div class="method-card"><i class="fa-solid fa-filter"></i><strong>Chi²</strong><span>Chi-square filter</span></div>
+                <div class="method-card"><i class="fa-solid fa-circle-nodes"></i><strong>Mutual Information</strong><span>Dependency-based</span></div>
+                <div class="method-card"><i class="fa-solid fa-chart-area"></i><strong>ANOVA F-test</strong><span>Variance between classes</span></div>
+                <div class="method-card"><i class="fa-solid fa-sliders"></i><strong>Variance Threshold</strong><span>Low-variance removal</span></div>
             </div>
-
-            <div class="card method-box statistical-box">
-                <div class="card-header bg-success text-white">
-                    <h5><i class="fas fa-chart-line me-2"></i>الطرق الإحصائية</h5>
-                </div>
-                <div class="card-body">
-                    <div class="method-description">
-                        <p>تشمل الطرق الإحصائية: Chi-Square, Mutual Information, ANOVA F-Test, Variance Threshold</p>
-                    </div>
-                    <div class="row mt-4">
-                        <div class="col-md-3">
-                            <div class="method-item">
-                                <h6><i class="fas fa-square-root-alt me-2"></i>Chi-Square</h6>
-                                <p class="small text-muted">اختيار الميزات بناءً على اختبار مربع كاي للإستقلالية</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="method-item">
-                                <h6><i class="fas fa-info-circle me-2"></i>Mutual Information</h6>
-                                <p class="small text-muted">اختيار الميزات بناءً على المعلومات المتبادلة</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="method-item">
-                                <h6><i class="fas fa-chart-bar me-2"></i>ANOVA F-Test</h6>
-                                <p class="small text-muted">اختيار الميزات بناءً على تحليل التباين</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="method-item">
-                                <h6><i class="fas fa-sliders-h me-2"></i>Variance Threshold</h6>
-                                <p class="small text-muted">إزالة الميزات ذات التباين المنخفض</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-center mt-4">
-                        <button class="btn btn-success btn-lg" id="runStatisticalMethods">
-                            <i class="fas fa-play-circle me-2"></i>تشغيل جميع الطرق الإحصائية
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-3 text-center">
-                <small class="text-muted">
-                    <i class="fas fa-info-circle me-1"></i>
-                    الطرق المخزنة: 
-                    <span id="traditionalCacheStatus" class="badge bg-secondary">لا توجد نتائج مخزنة</span>
-                </small>
-            </div>
+            <button class="btn btn-secondary" id="runStatisticalMethods"><i class="fa-solid fa-play"></i> Run statistical methods</button>
+            <div class="cache-note"><span id="traditionalCacheStatus" class="cache-pill">No cached results</span></div>
+            <div id="statistical-results-section" class="result-panel mt-4" style="display:none;"><div id="statisticalResultsContent"></div></div>
         </section>
 
-        <!-- قسم نتائج الطرق الإحصائية -->
-        <section id="statistical-results-section" class="mb-5" style="display: none;">
-            <div class="section-header">
-                <h2><i class="fas fa-calculator me-2"></i>نتائج الطرق الإحصائية</h2>
-                <p class="section-description">النتائج التفصيلية للطرق الإحصائية المطبقة</p>
+        <section id="comparison-section" class="container app-section final-section">
+            <div class="benchmark-hero">
+                <div><div class="eyebrow"><span></span> 05 / BENCHMARK</div><h2>Performance is only half the story.</h2><p>Compare predictive performance with the size of the selected feature space.</p></div>
+                <div class="benchmark-actions"><button class="btn btn-primary btn-lg" id="compareMethods"><i class="fa-solid fa-chart-column"></i> Compare all results</button><button class="btn btn-ghost" id="clearCache"><i class="fa-solid fa-trash-can"></i> Clear cache</button></div>
             </div>
-
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5><i class="fas fa-chart-line me-2"></i>النتائج التفصيلية</h5>
+            <div id="comparisonResults" style="display:none;">
+                <div class="chart-grid">
+                    <div class="chart-card"><div class="chart-title"><span>Method performance</span><small>Fitness / score</small></div><img id="comparisonChart" class="img-fluid" alt="Method comparison chart"></div>
+                    <div class="chart-card"><div class="chart-title"><span>GA convergence</span><small>Best fitness by generation</small></div><img id="gaHistoryChart" class="img-fluid" alt="GA convergence chart"></div>
                 </div>
-                <div class="card-body">
-                    <div id="statisticalResultsContent">
-                        <!-- سيتم ملء هذا القسم بالنتائج -->
-                    </div>
-                </div>
+                <div class="result-panel mt-4"><div class="panel-head"><div><span class="eyebrow small-eyebrow"><span></span> BENCHMARK TABLE</div><h3>Detailed comparison</h3></div><div class="table-wrap"><table class="table" id="resultsTable"><thead><tr><th>Method</th><th>Fitness</th><th>Features</th><th>Selected subset</th></tr></thead><tbody id="resultsBody"></tbody></table></div></div>
             </div>
         </section>
+    </main>
 
-        <!-- قسم المقارنة -->
-        <section id="comparison-section" class="mb-5">
-            <div class="section-header">
-                <h2><i class="fas fa-balance-scale me-2"></i>المقارنة والنتائج</h2>
-                <p class="section-description">قارن بين أداء جميع الطرق واعرض النتائج النهائية</p>
-            </div>
-
-            <div class="text-center mb-4">
-                <button class="btn btn-danger btn-lg" id="compareMethods">
-                    <i class="fas fa-chart-bar me-2"></i>مقارنة جميع النتائج
-                </button>
-                <button class="btn btn-outline-secondary ms-2" id="clearCache">
-                    <i class="fas fa-trash me-2"></i>مسح الذاكرة المؤقتة
-                </button>
-            </div>
-
-            <div id="comparisonResults" style="display: none;">
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <div class="card-header bg-info text-white">
-                                <h5><i class="fas fa-chart-bar me-2"></i>مقارنة أداء الطرق</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <img id="comparisonChart" class="img-fluid" alt="مخطط المقارنة">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <div class="card-header bg-warning text-dark">
-                                <h5><i class="fas fa-chart-line me-2"></i>تطور اللياقة (GA)</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <img id="gaHistoryChart" class="img-fluid" alt="مخطط تطور اللياقة">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5><i class="fas fa-table me-2"></i>النتائج التفصيلية</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped" id="resultsTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>الطريقة</th>
-                                        <th>درجة اللياقة</th>
-                                        <th>عدد الميزات</th>
-                                        <th>الميزات المختارة</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resultsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- التذييل -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container text-center">
-            <p>EvoSelect — اختيار الميزات التطوري والطرق التقليدية</p>
-            <p class="mb-0">تم التطوير باستخدام Flask و Python و JavaScript</p>
+    <footer>
+        <div class="container footer-inner">
+            <div><a class="brand" href="#"><span class="brand-mark"><i class="fa-solid fa-dna"></i></span><span>Evo<span>Select</span></span></a><p>Evolutionary feature selection & benchmarking.</p></div>
+            <div class="footer-tech"><span>Python</span><span>Flask</span><span>scikit-learn</span><span>Genetic Algorithm</span></div>
         </div>
     </footer>
+</div>
+<div id="toastArea" class="toast-area"></div>
 
-    <!-- Bootstrap & jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

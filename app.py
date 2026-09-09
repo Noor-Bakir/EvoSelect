@@ -6,6 +6,9 @@ import io
 import json
 import os
 import threading
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+import time
 from dataclasses import asdict
 
 import numpy as np
@@ -26,6 +29,79 @@ app = Flask(__name__)
 _CACHE: dict[str, dict] = {}
 _CACHE_LOCK = threading.Lock()
 _MAX_CACHE_ITEMS = 64
+
+# Long-running GA jobs are executed outside the HTTP request so the browser
+# never has to keep one request open for the entire evolutionary search.
+_GA_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="evoselect-ga")
+_GA_JOBS: dict[str, dict] = {}
+_GA_JOBS_LOCK = threading.Lock()
+_GA_JOB_TTL_SECONDS = 3600
+
+
+def _ga_job_update(job_id, **updates):
+    with _GA_JOBS_LOCK:
+        job = _GA_JOBS.get(job_id)
+        if job:
+            job.update(updates)
+
+
+def _cleanup_ga_jobs():
+    cutoff = time.time() - _GA_JOB_TTL_SECONDS
+    with _GA_JOBS_LOCK:
+        stale = [jid for jid, job in _GA_JOBS.items()
+                 if job.get("finished_at", job.get("created_at", 0)) < cutoff]
+        for jid in stale:
+            _GA_JOBS.pop(jid, None)
+
+
+def _run_ga_job(job_id, df, target, config, key):
+    try:
+        cached = _cache_get(key)
+        if cached is not None:
+            _ga_job_update(job_id, status="completed", progress=100,
+                           result={**cached, "cached": True}, finished_at=time.time())
+            return
+
+        def on_progress(info):
+            pct = int(round(info["generation"] / max(info["total_generations"], 1) * 100))
+            _ga_job_update(
+                job_id,
+                status="running",
+                progress=pct,
+                generation=info["generation"],
+                total_generations=info["total_generations"],
+                best_fitness=info["best_fitness"],
+                selected_count=info["best_selected_count"],
+                evaluated_solutions=info["evaluated_solutions"],
+            )
+
+        job = _GA_JOBS.get(job_id)
+        result = run_genetic_algorithm(
+            df, target, config=config, verbose=False,
+            progress_callback=on_progress,
+            cancel_event=job["cancel_event"] if job else None,
+        )
+
+        if result.get("cancelled"):
+            _ga_job_update(job_id, status="cancelled", progress=0, finished_at=time.time())
+            return
+
+        result["dataset"] = {
+            "target": target,
+            "n_samples": len(df),
+            "n_features": df.shape[1] - 1,
+        }
+        _cache_put(key, result)
+        _ga_job_update(
+            job_id, status="completed", progress=100,
+            generation=config.generations, total_generations=config.generations,
+            result={**_json_safe(result), "cached": False},
+            finished_at=time.time(),
+        )
+    except Exception as exc:
+        _ga_job_update(job_id, status="error", error=str(exc), finished_at=time.time())
+
+
 
 
 def _json_safe(value):
@@ -144,6 +220,7 @@ METHODS = {
 @app.post("/api/ga")
 def run_ga():
     try:
+        _cleanup_ga_jobs()
         payload = request.get_json(silent=True) or {}
         df, target = _dataset_from_payload(payload)
 
@@ -164,18 +241,47 @@ def run_ga():
 
         cached = _cache_get(key)
         if cached is not None and payload.get("use_cache", True):
-            return jsonify({**cached, "cached": True})
+            return jsonify({**_json_safe(cached), "cached": True})
 
-        result = run_genetic_algorithm(df, target, config=config)
-        result["dataset"] = {
-            "target": target,
-            "n_samples": len(df),
-            "n_features": df.shape[1] - 1,
-        }
-        _cache_put(key, result)
-        return jsonify({**_json_safe(result), "cached": False})
+        job_id = uuid.uuid4().hex
+        cancel_event = threading.Event()
+        with _GA_JOBS_LOCK:
+            _GA_JOBS[job_id] = {
+                "status": "queued", "progress": 0, "generation": 0,
+                "total_generations": config.generations,
+                "created_at": time.time(), "cancel_event": cancel_event,
+            }
+
+        _GA_EXECUTOR.submit(_run_ga_job, job_id, df.copy(), target, config, key)
+        return jsonify({
+            "job_id": job_id,
+            "status": "queued",
+            "message": "Evolutionary search started.",
+        }), 202
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
+
+
+@app.get("/api/ga/status/<job_id>")
+def ga_status(job_id):
+    _cleanup_ga_jobs()
+    with _GA_JOBS_LOCK:
+        job = _GA_JOBS.get(job_id)
+        if not job:
+            return jsonify({"error": "GA job not found or expired."}), 404
+        public = {k: v for k, v in job.items() if k != "cancel_event"}
+    return jsonify(_json_safe(public))
+
+
+@app.post("/api/ga/cancel/<job_id>")
+def ga_cancel(job_id):
+    with _GA_JOBS_LOCK:
+        job = _GA_JOBS.get(job_id)
+        if not job:
+            return jsonify({"error": "GA job not found or expired."}), 404
+        job["cancel_event"].set()
+        job["status"] = "cancelling"
+    return jsonify({"success": True})
 
 
 @app.post("/api/traditional/run")
